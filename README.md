@@ -8,3 +8,7 @@
 * Repeating tasks
 * Run tasks even if scheduled time has elapsed (optional)
 * Interruptible
+
+# Sponsor
+
+If you find this library useful, consider [sponsering my work](https://github.com/sponsors/TheDcoder), it really helps me out as a full-time freelancer!
