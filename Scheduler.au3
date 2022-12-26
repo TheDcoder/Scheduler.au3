@@ -29,6 +29,7 @@ SOFTWARE.
 ; AutoIt Version : 3.3.16.1
 ; Description ...: A time-based task scheduler to run arbitrary tasks at set times in a day
 ; Author(s) .....: TheDcoder <TheDcoder@protonmail.com>
+; Link ..........: https://github.com/TheDcoder/Scheduler.au3
 ; ===============================================================================================================================
 
 #include-once
