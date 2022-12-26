@@ -7,4 +7,4 @@
 * Milli-second precision with reasonable accuracy
 * Repeating tasks
 * Run tasks even if scheduled time has elapsed (optional)
-* Interruptable
+* Interruptible
