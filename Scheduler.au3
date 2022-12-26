@@ -30,6 +30,7 @@ SOFTWARE.
 ; Description ...: A time-based task scheduler to run arbitrary tasks at set times in a day
 ; Author(s) .....: TheDcoder <TheDcoder@protonmail.com>
 ; Link ..........: https://github.com/TheDcoder/Scheduler.au3
+; Forum .........: https://www.autoitscript.com/forum/topic/209375-scheduler-udf-run-tasks-according-to-a-schedule-in-a-day
 ; ===============================================================================================================================
 
 #include-once
