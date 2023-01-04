@@ -139,8 +139,8 @@ EndFunc
 ; #FUNCTION# ====================================================================================================================
 ; Name ..........: _Scheduler_MakeTimesheet
 ; Description ...: Make a timesheet from a schedule
-; Syntax ........: _Scheduler_MakeTimesheet($aOrigSchedule)
-; Parameters ....: $aOrigSchedule       - The schedule, see remarks.
+; Syntax ........: _Scheduler_MakeTimesheet($aSchedule)
+; Parameters ....: $aSchedule       - The schedule, see remarks.
 ; Return values .: The timesheet and @extended is set to number of tasks in a day
 ; Author ........: TheDcoder
 ; Remarks .......: A schedule is nothing but a 2D array with 2 columns:
@@ -165,59 +165,62 @@ EndFunc
 ;
 ; Related .......: _Scheduler_Run will automatically call this function if you supply a schedule
 ; ===============================================================================================================================
-Func _Scheduler_MakeTimesheet($aOrigSchedule)
+Func _Scheduler_MakeTimesheet($aSchedule)
 	Local $iTaskCount = 0
-	For $i = 0 To UBound($aOrigSchedule) - 1
-		If IsArray($aOrigSchedule[$i]) Then
-			Local $aSubSchedule = $aOrigSchedule[$i]
+	For $i = 0 To UBound($aSchedule) - 1
+		If IsArray($aSchedule[$i][$geScheduler_EnumTime]) Then
+			Local $aSubSchedule = $aSchedule[$i][$geScheduler_EnumTime]
 			For $j = 0 To UBound($aSubSchedule) - 1
 				$iTaskCount += 1
 				Local $sOrigStamp = $aSubSchedule[$j]
 				$aSubSchedule[$j] = _Scheduler_StampToTime($aSubSchedule[$j])
 			Next
-			$aOrigSchedule[$i] = $aSubSchedule
+			$aSchedule[$i][$geScheduler_EnumTime] = $aSubSchedule
 		Else
 			$iTaskCount += 1
-			$aOrigSchedule[$i] = _Scheduler_StampToTime($aOrigSchedule[$i])
-		EndIf
-	Next
-
-	; Transform the schedule
-	Local $aSchedule[$iTaskCount][2]
-	Local $iCurTask = 0
-	For $i = 0 To UBound($aOrigSchedule) - 1
-		If IsArray($aOrigSchedule[$i]) Then
-			Local $aOrigSubSchedule = $aOrigSchedule[$i]
-			For $j = 0 To UBound($aOrigSubSchedule) - 1
-				$aSchedule[$iCurTask][$geScheduler_EnumTask] = $i
-				$aSchedule[$iCurTask][$geScheduler_EnumTime] = $aOrigSubSchedule[$j]
-				$iCurTask += 1
-			Next
-		Else
-			$aSchedule[$iCurTask][$geScheduler_EnumTask] = $i
-			$aSchedule[$iCurTask][$geScheduler_EnumTime] = $aOrigSchedule[$i]
-			$iCurTask += 1
+			$aSchedule[$i][$geScheduler_EnumTime] = _Scheduler_StampToTime($aSchedule[$i][$geScheduler_EnumTime])
 		EndIf
 	Next
 
 	Local $aSheet[$iTaskCount][2]
 	Local $iTime = 0
-	Local $iLowest, $iLowestDiff, $iDiff
+	Local $iLowest, $iLowestDiff, $iDiff, $mDiffSubIdx[]
 	For $i = 0 To $iTaskCount - 1
 		$iLowest = -1
 		$iLowestDiff = -1
 		For $j = 0 To UBound($aSchedule) - 1
-			If $aSchedule[$j][$geScheduler_EnumTask] = Null Then ContinueLoop
-			$iDiff = $aSchedule[$j][$geScheduler_EnumTime] - $iTime
+			If IsArray($aSchedule[$j][$geScheduler_EnumTime]) Then
+				Local $aSubSchedule = $aSchedule[$j][$geScheduler_EnumTime]
+				Local $iSubScheduleDiff, $iSubScheduleLowestDiff = -1
+				For $k = 0 To UBound($aSubSchedule) - 1
+					If $aSubSchedule[$k] = Null Then ContinueLoop
+					$iSubScheduleDiff = $aSubSchedule[$k] - $iTime
+					If $iSubScheduleDiff < $iSubScheduleLowestDiff Or $iSubScheduleLowestDiff = -1 Then
+						$iSubScheduleLowestDiff = $iSubScheduleDiff
+						$mDiffSubIdx[$j] = $k
+					EndIf
+				Next
+				$iDiff = $iSubScheduleLowestDiff
+			Else
+				If $aSchedule[$j][$geScheduler_EnumTime] = Null Then ContinueLoop
+				$iDiff = $aSchedule[$j][$geScheduler_EnumTime] - $iTime
+			EndIf
 			If $iDiff <= $iLowestDiff Or $iLowestDiff = -1 Then
 				$iLowest = $j
 				$iLowestDiff = $iDiff
 			EndIf
 		Next
-		$aSheet[$i][$geScheduler_EnumTask] = $iLowest
-		$aSheet[$i][$geScheduler_EnumTime] = $aSchedule[$iLowest][$geScheduler_EnumTime]
+		$aSheet[$i][$geScheduler_EnumTask] = $aSchedule[$iLowest][$geScheduler_EnumTask]
+		If IsArray($aSchedule[$iLowest][$geScheduler_EnumTime]) Then
+			Local $aSubSchedule = $aSchedule[$iLowest][$geScheduler_EnumTime]
+			$aSheet[$i][$geScheduler_EnumTime] = $aSubSchedule[$mDiffSubIdx[$iLowest]]
+			$aSubSchedule[$mDiffSubIdx[$iLowest]] = Null
+			$aSchedule[$iLowest][$geScheduler_EnumTime] = $aSubSchedule
+		Else
+			$aSheet[$i][$geScheduler_EnumTime] = $aSchedule[$iLowest][$geScheduler_EnumTime]
+			$aSchedule[$iLowest][$geScheduler_EnumTime] = Null
+		EndIf
 		$iTime = $iLowestDiff
-		$aSchedule[$iLowest][$geScheduler_EnumTask] = Null
 	Next
 
 	Return SetExtended($iTaskCount, $aSheet)
