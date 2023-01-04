@@ -107,24 +107,6 @@ Func _Scheduler_Run($aScheduleOrTimeSheet, $udfCallback, $udfInfoCallback = Null
 	WEnd
 EndFunc
 
-; #INTERNAL_USE_ONLY# ===========================================================================================================
-; Name ..........: __Scheduler_Run_Sleep
-; Description ...: Sleep for the given duration or until interrupted with _Scheduler_Stop
-; Syntax ........: __Scheduler_Run_Sleep($iDuration)
-; Parameters ....: $iDuration           - Sleep duration in milli-seconds.
-; Return values .: @error is set to 1 if interrupted
-; Author ........: TheDcoder
-; Related .......: _Scheduler_Stop
-; Example .......: __Scheduler_Run_Sleep(420)
-; ===============================================================================================================================
-Func __Scheduler_Run_Sleep($iDuration)
-	Local $hTimer = TimerInit()
-	Do
-		Sleep($g_bScheduler_SleepInterval)
-	Until $g__bScheduler_InterruptSleep Or TimerDiff($hTimer) > $iDuration
-	Return SetError($g__bScheduler_InterruptSleep ? 1 : 0)
-EndFunc
-
 ; #FUNCTION# ====================================================================================================================
 ; Name ..........: _Scheduler_Stop
 ; Description ...: Interrupt the running schedule
@@ -317,4 +299,22 @@ Func _Scheduler_TimeToString($iTime, $bIncludeMs = False)
 	EndIf
 
 	Return $sTime
+EndFunc
+
+; #INTERNAL_USE_ONLY# ===========================================================================================================
+; Name ..........: __Scheduler_Run_Sleep
+; Description ...: Sleep for the given duration or until interrupted with _Scheduler_Stop
+; Syntax ........: __Scheduler_Run_Sleep($iDuration)
+; Parameters ....: $iDuration           - Sleep duration in milliseconds.
+; Return values .: @error is set to 1 if interrupted
+; Author ........: TheDcoder
+; Related .......: _Scheduler_Stop
+; Example .......: __Scheduler_Run_Sleep(420)
+; ===============================================================================================================================
+Func __Scheduler_Run_Sleep($iDuration)
+	Local $hTimer = TimerInit()
+	Do
+		Sleep($g_bScheduler_SleepInterval)
+	Until $g__bScheduler_InterruptSleep Or TimerDiff($hTimer) > $iDuration
+	Return SetError($g__bScheduler_InterruptSleep ? 1 : 0)
 EndFunc
