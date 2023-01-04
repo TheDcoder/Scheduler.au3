@@ -50,8 +50,8 @@ Global $g__bScheduler_InterruptSleep = False
 ; Syntax ........: _Scheduler_Run($aScheduleOrTimeSheet, $udfCallback[, $bSkipLateTasks = False])
 ; Parameters ....: $aScheduleOrTimeSheet- A schedule or timesheet.
 ;                  $udfCallback         - The callback function which will be called for each task.
-;                  $bSkipLateTasks      - [optional] Skip tasks which are late? Default is False.
 ;                  $udfInfoCallback     - [optional] The info callback function which will be called before each task, see remarks.
+;                  $bSkipLateTasks      - [optional] Skip tasks which are late? Default is False.
 ; Return values .: None, does not return until _Scheduler_Stop is called.
 ; Author ........: TheDcoder
 ; Remarks .......: This function is an event-loop, See _Scheduler_MakeTimesheet for the format of a schedule.
@@ -63,7 +63,7 @@ Global $g__bScheduler_InterruptSleep = False
 ;                        resume as usual.
 ; Related .......: _Scheduler_Stop
 ; ===============================================================================================================================
-Func _Scheduler_Run($aScheduleOrTimeSheet, $udfCallback, $bSkipLateTasks = False, $udfInfoCallback = Null)
+Func _Scheduler_Run($aScheduleOrTimeSheet, $udfCallback, $udfInfoCallback = Null, $bSkipLateTasks = False)
 	Local $aSheet
 	If Not IsInt($aScheduleOrTimeSheet[0][$geScheduler_EnumTime]) Then
 		$aSheet = _Scheduler_MakeTimesheet($aScheduleOrTimeSheet)
@@ -72,18 +72,27 @@ Func _Scheduler_Run($aScheduleOrTimeSheet, $udfCallback, $bSkipLateTasks = False
 	EndIf
 
 	Local $iTime = _Scheduler_GetCurTime()
-	Local $iSlot
+	Local $iSlot = Null
 	Local $iTotalSlots = UBound($aSheet)
 	For $i = 0 To $iTotalSlots - 1
 		If $aSheet[$i][$geScheduler_EnumTime] < $iTime Then ContinueLoop
 		$iSlot = $i
 		ExitLoop
 	Next
+	If $iSlot = Null Then $iSlot = $iTotalSlots + 1 ; Skip today
 
 	Local $iWait
 	$g__bScheduler_InterruptSleep = False
-	$iTime = _Scheduler_GetCurTime()
 	While True
+		If $iSlot >= $iTotalSlots Then
+			; Wait for the next day and reset
+			$iWait = $geScheduler_MaxTime - $iTime
+			If $udfInfoCallback <> Null Then Call($udfInfoCallback, Null, $iWait)
+			$g_bScheduler_SleepFunction($iWait)
+			$iSlot = 0
+		EndIf
+
+		$iTime = _Scheduler_GetCurTime()
 		$iWait = $aSheet[$iSlot][$geScheduler_EnumTime] - $iTime
 		If $bSkipLateTasks And $iWait < 0 Then
 			$iSlot += 1
@@ -95,17 +104,6 @@ Func _Scheduler_Run($aScheduleOrTimeSheet, $udfCallback, $bSkipLateTasks = False
 
 		Call($udfCallback, $aSheet[$iSlot][$geScheduler_EnumTask])
 		$iSlot += 1
-
-		If $iSlot >= $iTotalSlots Then
-			; Wait for the next day and reset
-			$iWait = $geScheduler_MaxTime - $iTime
-			If $udfInfoCallback <> Null Then Call($udfInfoCallback, Null, $iWait)
-			$g_bScheduler_SleepFunction($iWait)
-			$iSlot = 0
-			$iTime = 0
-		Else
-			$iTime = _Scheduler_GetCurTime()
-		EndIf
 	WEnd
 EndFunc
 
