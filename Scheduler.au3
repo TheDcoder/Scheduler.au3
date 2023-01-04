@@ -49,14 +49,21 @@ Global $g__hScheduler_InterruptEvent = _WinAPI_CreateEvent(0, True, False)
 ; Parameters ....: $aScheduleOrTimeSheet- A schedule or timesheet.
 ;                  $udfCallback         - The callback function which will be called for each task.
 ;                  $bSkipLateTasks      - [optional] Skip tasks which are late? Default is False.
+;                  $udfInfoCallback     - [optional] The info callback function which will be called before each task, see remarks.
 ; Return values .: None, does not return until _Scheduler_Stop is called.
 ; Author ........: TheDcoder
 ; Remarks .......: This function is an event-loop, See _Scheduler_MakeTimesheet for the format of a schedule.
+;                  The $udfInfoCallback function will be called before each task with two pieces of information as arguments:
+;                  1. $vTask - The task which is scheduled to run next
+;                  2. $iWait - The remaining time until the task will run (in milli-seconds)
+;                  Note: After all the tasks have been ran, $udfInfoCallback will be call one last time for this day and
+;                        $vTask will be set to Null and $iWait will contain the time until mid-night, after which the schedule will
+;                        resume as usual.
 ; Related .......: _Scheduler_Stop
 ; ===============================================================================================================================
-Func _Scheduler_Run($aScheduleOrTimeSheet, $udfCallback, $bSkipLateTasks = False)
+Func _Scheduler_Run($aScheduleOrTimeSheet, $udfCallback, $bSkipLateTasks = False, $udfInfoCallback = Null)
 	Local $aSheet
-	If UBound($aScheduleOrTimeSheet, 0) = 1 Then
+	If Not IsInt($aScheduleOrTimeSheet[0][$geScheduler_EnumTime]) Then
 		$aSheet = _Scheduler_MakeTimesheet($aScheduleOrTimeSheet)
 	Else
 		$aSheet = $aScheduleOrTimeSheet
@@ -80,6 +87,7 @@ Func _Scheduler_Run($aScheduleOrTimeSheet, $udfCallback, $bSkipLateTasks = False
 			$iSlot += 1
 			ContinueLoop
 		EndIf
+		If $udfInfoCallback <> Null Then Call($udfInfoCallback, $aSheet[$iSlot][$geScheduler_EnumTask], $iWait)
 		__Scheduler_Run_Sleep($iWait)
 		If @error Then ExitLoop
 
@@ -88,7 +96,9 @@ Func _Scheduler_Run($aScheduleOrTimeSheet, $udfCallback, $bSkipLateTasks = False
 
 		If $iSlot >= $iTotalSlots Then
 			; Wait for the next day and reset
-			__Scheduler_Run_Sleep($geScheduler_MaxTime)
+			$iWait = $geScheduler_MaxTime - $iTime
+			If $udfInfoCallback <> Null Then Call($udfInfoCallback, Null, $iWait)
+			__Scheduler_Run_Sleep($iWait)
 			$iSlot = 0
 			$iTime = 0
 		Else
