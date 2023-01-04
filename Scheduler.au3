@@ -283,3 +283,32 @@ Func _Scheduler_GetCurTime()
 	$iTime += @MSEC
 	Return $iTime
 EndFunc
+
+; #FUNCTION# ====================================================================================================================
+; Name ..........: _Scheduler_TimeToString
+; Description ...: Convert time to an user-friendly string for display
+; Syntax ........: _Scheduler_TimeToString($iTime[, $bIncludeMs = False])
+; Parameters ....: $iTime               - The time as returned by _Scheduler_StampToTime.
+;                  $bIncludeMs          - [optional] Include milli-seconds? Default is False.
+; Return values .: An user-friendly string representation
+; Author ........: TheDcoder
+; Related .......: _Scheduler_StampToTime
+; Example .......: 8h 9m 29s 426ms
+; ===============================================================================================================================
+Func _Scheduler_TimeToString($iTime, $bIncludeMs = False)
+	Local $iHours = Floor($iTime / 1000 / 60 / 60)
+	$iTime -= $iHours * 1000 * 60 * 60
+	Local $iMinutes = Floor($iTime / 1000 / 60)
+	$iTime -= $iMinutes * 1000 * 60
+	Local $iSeconds = $bIncludeMs ? Floor($iTime / 1000) : Round($iTime / 1000)
+	$iTime -= $iSeconds * 1000
+
+	Local $sTime = $iSeconds & 's'
+	If $iMinutes Then $sTime = $iMinutes & 'm ' & $sTime
+	If $iHours Then $sTime = $iHours & 'h ' & $sTime
+	If $bIncludeMs Then
+		$sTime &= ' ' & $iTime & 'ms'
+	EndIf
+
+	Return $sTime
+EndFunc
