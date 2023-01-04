@@ -54,12 +54,12 @@ Global $g__bScheduler_InterruptSleep = False
 ;                  $bSkipLateTasks      - [optional] Skip tasks which are late? Default is False.
 ; Return values .: None, does not return until _Scheduler_Stop is called.
 ; Author ........: TheDcoder
-; Remarks .......: This function is an event-loop, See _Scheduler_MakeTimesheet for the format of a schedule.
+; Remarks .......: This function is an event-loop, see _Scheduler_MakeTimesheet for the format of a schedule.
 ;                  The $udfInfoCallback function will be called before each task with two pieces of information as arguments:
 ;                  1. $vTask - The task which is scheduled to run next
-;                  2. $iWait - The remaining time until the task will run (in milli-seconds)
+;                  2. $iWait - The remaining time until the task will run (in milliseconds)
 ;                  Note: After all the tasks have been ran, $udfInfoCallback will be call one last time for this day and
-;                        $vTask will be set to Null and $iWait will contain the time until mid-night, after which the schedule will
+;                        $vTask will be set to Null and $iWait will contain the time until midnight, after which the schedule will
 ;                        resume as usual.
 ; Related .......: _Scheduler_Stop
 ; ===============================================================================================================================
@@ -161,7 +161,7 @@ EndFunc
 ;
 ;                  $aSchedule[2][$geScheduler_EnumTask] = "baz"
 ;                  Local $aBazSubSchedule[3] ; This task has a mini sub-schedule, so it can run multiple times in a day!
-;                  $aBazSubSchedule[0] = '0' ; Mid-night (start of the day)
+;                  $aBazSubSchedule[0] = '0' ; Midnight (start of the day)
 ;                  $aBazSubSchedule[1] = '9:30' ; 9:30 AM
 ;                  $aBazSubSchedule[2] = '17:18:19' ; 5:18 PM + 19 seconds
 ;                  $aSchedule[2][$geScheduler_EnumTime] = $aBazSubSchedule ; Run 3 times a day at given times
@@ -234,14 +234,14 @@ EndFunc
 ; Description ...: Convert a timestamp to an integer for use in timesheets
 ; Syntax ........: _Scheduler_StampToTime($sStamp)
 ; Parameters ....: $sStamp              - The timestamp, see remarks.
-; Return values .: An integer which represents the timestamp as the duration from the start of the day (mid-night) in milli-seconds
+; Return values .: An integer which represents the timestamp as the duration from the start of the day (midnight) in milliseconds
 ; Author ........: TheDcoder
 ; Remarks .......: The format of the timestamp is simple, it is a string with numbers delimited with `:`.
 ;                  A timestamp can have 4 components (all are optional):
 ;                  1. Hours
 ;                  2. Minutes
 ;                  3. Seconds
-;                  4. Milli-seconds
+;                  4. Milliseconds
 ;
 ;                  Padding of numbers with 0 is optionally allowed since the `Number` function is used for conversion to integer
 ; Related .......: _Scheduler_MakeTimesheet
@@ -260,7 +260,7 @@ Func _Scheduler_StampToTime($sStamp)
 			; Second
 			$iMultiplier = 1000
 		ElseIf $i = 4 Then
-			; Milli-Second
+			; Millisecond
 			$iMultiplier = 1
 		Else
 			; Invalid
@@ -276,7 +276,7 @@ EndFunc
 ; Description ...: Get the current time of day
 ; Syntax ........: _Scheduler_GetCurTime()
 ; Parameters ....: None
-; Return values .: The number of milli-seconds elasped since mid-night
+; Return values .: The number of milliseconds elasped since midnight
 ; Author ........: TheDcoder
 ; Remarks .......: This is mostly used internally but you can use this to make your own dynamic timesheets manually
 ; Example .......: $aSheet[0][$geScheduler_EnumTime] = _Scheduler_GetCurTime() + _Scheduler_StampToTime('0:0:10') ; 10 seconds from now
@@ -295,7 +295,7 @@ EndFunc
 ; Description ...: Convert time to an user-friendly string for display
 ; Syntax ........: _Scheduler_TimeToString($iTime[, $bIncludeMs = False])
 ; Parameters ....: $iTime               - The time as returned by _Scheduler_StampToTime.
-;                  $bIncludeMs          - [optional] Include milli-seconds? Default is False.
+;                  $bIncludeMs          - [optional] Include milliseconds? Default is False.
 ; Return values .: An user-friendly string representation
 ; Author ........: TheDcoder
 ; Related .......: _Scheduler_StampToTime
