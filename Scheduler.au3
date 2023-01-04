@@ -35,12 +35,14 @@ SOFTWARE.
 
 #include-once
 #include <Array.au3>
-#include <WinAPIProc.au3>
 
 Global Enum $geScheduler_EnumTask, $geScheduler_EnumTime
 Global Const $geScheduler_MaxTime = 24 * 60 * 60 * 1000 ; 24 hours
 
-Global $g__hScheduler_InterruptEvent = _WinAPI_CreateEvent(0, True, False)
+Global $g_bScheduler_SleepInterval = 1000
+Global $g_bScheduler_SleepFunction = __Scheduler_Run_Sleep
+
+Global $g__bScheduler_InterruptSleep = False
 
 ; #FUNCTION# ====================================================================================================================
 ; Name ..........: _Scheduler_Run
@@ -79,7 +81,7 @@ Func _Scheduler_Run($aScheduleOrTimeSheet, $udfCallback, $bSkipLateTasks = False
 	Next
 
 	Local $iWait
-	_WinAPI_ResetEvent($g__hScheduler_InterruptEvent)
+	$g__bScheduler_InterruptSleep = False
 	$iTime = _Scheduler_GetCurTime()
 	While True
 		$iWait = $aSheet[$iSlot][$geScheduler_EnumTime] - $iTime
@@ -88,7 +90,7 @@ Func _Scheduler_Run($aScheduleOrTimeSheet, $udfCallback, $bSkipLateTasks = False
 			ContinueLoop
 		EndIf
 		If $udfInfoCallback <> Null Then Call($udfInfoCallback, $aSheet[$iSlot][$geScheduler_EnumTask], $iWait)
-		__Scheduler_Run_Sleep($iWait)
+		$g_bScheduler_SleepFunction($iWait)
 		If @error Then ExitLoop
 
 		Call($udfCallback, $aSheet[$iSlot][$geScheduler_EnumTask])
@@ -98,7 +100,7 @@ Func _Scheduler_Run($aScheduleOrTimeSheet, $udfCallback, $bSkipLateTasks = False
 			; Wait for the next day and reset
 			$iWait = $geScheduler_MaxTime - $iTime
 			If $udfInfoCallback <> Null Then Call($udfInfoCallback, Null, $iWait)
-			__Scheduler_Run_Sleep($iWait)
+			$g_bScheduler_SleepFunction($iWait)
 			$iSlot = 0
 			$iTime = 0
 		Else
@@ -118,8 +120,11 @@ EndFunc
 ; Example .......: __Scheduler_Run_Sleep(420)
 ; ===============================================================================================================================
 Func __Scheduler_Run_Sleep($iDuration)
-	Local $vRet = _WinAPI_WaitForSingleObject($g__hScheduler_InterruptEvent, $iDuration)
-	Return SetError($vRet = $g__hScheduler_InterruptEvent ? 1 : 0)
+	Local $hTimer = TimerInit()
+	Do
+		Sleep($g_bScheduler_SleepInterval)
+	Until $g__bScheduler_InterruptSleep Or TimerDiff($hTimer) > $iDuration
+	Return SetError($g__bScheduler_InterruptSleep ? 1 : 0)
 EndFunc
 
 ; #FUNCTION# ====================================================================================================================
@@ -133,7 +138,7 @@ EndFunc
 ; Example .......: If $bFatalError Or $bShitHitTheFan Then _Scheduler_Stop()
 ; ===============================================================================================================================
 Func _Scheduler_Stop()
-	_WinAPI_SetEvent($g__hScheduler_InterruptEvent)
+	$g__bScheduler_InterruptSleep = True
 EndFunc
 
 ; #FUNCTION# ====================================================================================================================
