@@ -318,3 +318,34 @@ Func _Scheduler_TimeToString($iTime, $bIncludeMs = False)
 
 	Return $sTime
 EndFunc
+
+;~ ; #FUNCTION# ====================================================================================================================
+; Name ..........: _Scheduler_TimeToStamp
+; Description ...: Convert time to a timestamp user-friendly string for display
+; Date created ..: 12/03/2023
+; Syntax ........: _Scheduler_TimeToStamp($iTime [, $bIncludeMs = False])
+; Parameters ....: $iTime   	           - The time as returned by _Scheduler_StampToTime
+;		   $bIncludeMs		   - [optional] Include milli-seconds? Default is False.
+; Return values .: A timestamp representing the time since midnight
+; Author ........: Phoenix Huynh [Supported by TheDcoder]
+; Related .......: _Scheduler_StampToTime, _Scheduler_TimeToString
+; Example .......: 08:09:29 or 08:09:29:99
+; ===============================================================================================================================
+
+Func _Scheduler_TimeToStamp($iTime, $bIncludeMs = False)
+	Local $sTime = ""
+
+	Local $iHours = Floor($iTime / 1000 / 60 / 60)
+	$iTime -= $iHours * 1000 * 60 * 60
+	Local $iMinutes = Floor($iTime / 1000 / 60)
+	$iTime -= $iMinutes * 1000 * 60
+	Local $iSeconds = $bIncludeMs ? Floor($iTime / 1000) : Round($iTime / 1000)
+	$iTime -= $iSeconds * 1000
+
+	$sTime &= ($iHours > 9) ? ($iHours & ":") : (($iHours = 0) ? ("00:") : ("0" & $iHours & ":"))
+	$sTime &= ($iMinutes > 9) ? ($iMinutes & ":") : (($iMinutes = 0) ? ("00:") : ("0" & $iMinutes & ":"))
+	$sTime &= ($iSeconds > 9) ? ($iSeconds) : (($iSeconds = 0) ? ("00") : ("0" & $iSeconds))
+	$sTime &= $bIncludeMs ? (":" & $iTime) : ""
+
+	Return $sTime
+EndFunc   ;==>_Scheduler_TimeToStamp
